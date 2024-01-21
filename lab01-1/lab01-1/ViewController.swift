@@ -43,6 +43,7 @@ class ViewController: UIViewController {
         let button = UIButton(type: .system)
         button.setTitle("enter", for: .normal)
         button.backgroundColor = .white
+        button.addTarget(self, action: #selector(btnSubmitTap), for: .touchUpInside)
         return button
     }()
     
@@ -91,6 +92,24 @@ class ViewController: UIViewController {
         setConstrs()
     }
 
-
 }
 
+private extension ViewController {
+   
+    @objc func btnSubmitTap() {
+        let tab1 = UINavigationController(rootViewController: FriendsTab())
+        tab1.tabBarItem.title = "Friends"
+        let tab2 = UINavigationController(rootViewController: GroupsTab())
+        tab2.tabBarItem.title = "Groups"
+        let tab3 = UINavigationController(rootViewController: PhotosTab(collectionViewLayout: UICollectionViewFlowLayout()))
+        tab3.tabBarItem.title = "Photos"
+
+        let tabs = [tab1, tab2, tab3]
+        let tabBarCtrlr = UITabBarController()
+        tabBarCtrlr.viewControllers = tabs
+        navigationController?.pushViewController(tabBarCtrlr, animated: true)
+        navigationController?.navigationBar.isHidden = true
+        
+    }
+    
+}
