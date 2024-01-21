@@ -44,7 +44,6 @@
 		60E59B7E2B49CD5900C77022 = {
 			isa = PBXGroup;
 			children = (
-				60B797052B5DAB77000DAD8D /* PhotosTab.swift */,
 				60E59B892B49CD5900C77022 /* lab01-1 */,
 				60E59B882B49CD5900C77022 /* Products */,
 			);
@@ -61,6 +60,7 @@
 		60E59B892B49CD5900C77022 /* lab01-1 */ = {
 			isa = PBXGroup;
 			children = (
+				60B797052B5DAB77000DAD8D /* PhotosTab.swift */,
 				60E59B8A2B49CD5900C77022 /* AppDelegate.swift */,
 				60E59B8C2B49CD5900C77022 /* SceneDelegate.swift */,
 				60E59B8E2B49CD5900C77022 /* ViewController.swift */,
