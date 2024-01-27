@@ -6,9 +6,112 @@
 //
 
 import UIKit
+import WebKit
+import Foundation
 
-class ViewController: UIViewController {
+
+struct PhotosStruct: Decodable {
+    let response: PhotoItems
+}
+
+struct PhotoItems: Decodable {
+    let items: [PhotoSizes]
+}
+
+struct PhotoSizes: Decodable {
+    let sizes: [Photo]
+}
+
+struct Photo: Decodable {
+    let url: String
+}
+
+// ----------
+
+struct GroupsStuct: Decodable {
+    let response: GroupsItems
+}
+
+struct GroupsItems: Decodable {
+    let items: [Group]
+}
+
+struct Group: Decodable {
+    let desc: String?
+    let name: String
+    let photo: String
+    enum CodingKeys: String, CodingKey{
+        case desc = "description"
+        case name = "name"
+        case photo = "photo_50"
+    }
+}
+
+// ----------
+
+struct FriendsStuct: Decodable {
+    let response: FriendsItems
+}
+
+struct FriendsItems: Decodable {
+    let items: [Friend]
+}
+
+struct Friend: Decodable {
+    let firstName: String
+    let lastName: String
+    let photo: String
+    enum CodingKeys: String, CodingKey{
+        case firstName = "first_name"
+        case lastName = "last_name"
+        case photo = "photo_50"
+    }
+}
+
+
+class NetworkService {
+    static var token = ""
+
+    static let session = URLSession.shared
+
+    func getGroups() {
+        guard let url = URL(string: "https://api.vk.com/method/groups.get?access_token=\(NetworkService.token)&v=5.199&extended=1&fields=description") else {return}
+        NetworkService.session.dataTask(with: url) { (data, _, networkError) in
+            guard let data = data else {return}
+            do {
+                let groups = try JSONDecoder().decode(GroupsStuct.self, from: data)
+                print(groups)
+            } catch {print(error)}
+        }.resume()
+    }
+
+    func getFriends() {
+        guard let url = URL(string: "https://api.vk.com/method/friends.get?access_token=\(NetworkService.token)&v=5.199&fields=photo_50") else {return}
+        NetworkService.session.dataTask(with: url) { (data, _, networkError) in
+            guard let data = data else {return}
+            do {
+                let friends = try JSONDecoder().decode(FriendsStuct.self, from: data)
+                print(friends)
+            } catch {print(error)}
+        }.resume()
+    }
     
+    func getPhotos() {
+        guard let url = URL(string: "https://api.vk.com/method/photos.get?access_token=\(NetworkService.token)&v=5.199&album_id=wall") else {return}
+        NetworkService.session.dataTask(with: url) { (data, _, networkError) in
+            guard let data = data else {return}
+            do {
+                let photos = try JSONDecoder().decode(PhotosStruct.self, from: data)
+                print(photos)
+            } catch {print(error)}
+        }.resume()
+    }
+    
+}
+
+class ViewController: UIViewController, WKNavigationDelegate {
+
+/*
     private var imgLogin: UIImageView = {
         let img = UIImageView()
         img.image = UIImage(named: "login")
@@ -46,16 +149,17 @@ class ViewController: UIViewController {
         button.addTarget(self, action: #selector(btnSubmitTap), for: .touchUpInside)
         return button
     }()
+*/
     
-    private func setupUI() {
+/*    private func setupUI() {
         view.addSubview(lblCaption)
         view.addSubview(imgLogin)
         view.addSubview(txtLogin)
         view.addSubview(txtPassword)
         view.addSubview(btnSubmit)
-    }
+    } */
 
-    private func setConstrs() {
+/*    private func setConstrs() {
         lblCaption.translatesAutoresizingMaskIntoConstraints = false
         imgLogin.translatesAutoresizingMaskIntoConstraints = false
         txtLogin.translatesAutoresizingMaskIntoConstraints = false
@@ -83,13 +187,55 @@ class ViewController: UIViewController {
             btnSubmit.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             btnSubmit.widthAnchor.constraint(equalToConstant: view.frame.size.width/1.5)
         ])
-    }
+    } */
     
-    override func viewDidLoad() {
+/*    override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .init(red: 0.8, green: 0.6, blue: 1.0, alpha: 1.0)
         setupUI()
         setConstrs()
+    } */
+
+    private lazy var webView: WKWebView = {
+        let wv = WKWebView(frame: view.bounds)
+        wv.navigationDelegate = self
+        return wv
+    }()
+    
+    func webView(_ webView: WKWebView, decidePolicyFor navigationResponse: WKNavigationResponse, decisionHandler: @escaping(WKNavigationResponsePolicy) -> Void) {
+        guard let url = navigationResponse.response.url, url.path == "/blank.html", let frag = url.fragment else {
+            decisionHandler(.allow)
+            return
+        }
+        let params = frag
+                    .components(separatedBy: "§")
+                    .map { $0.components(separatedBy: "=") }
+                    .reduce([String: String]()) { result, param in
+                        var dict = result
+                        let key = param[0]
+                        let value = param[1]
+                        dict[key] = value
+                        return dict
+                    }
+        NetworkService.token = params["access_token"] ?? ""
+        print(NetworkService.token)
+        decisionHandler(.cancel)
+        webView.removeFromSuperview()
+        btnSubmitTap()
+    }
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        view.backgroundColor = .white
+        title = "ViewController"
+        setupUI()
+        let infoScope = "262150"
+        guard let url = URL(string: "https://oauth.vk.com/authorize?client_id=51843071&redirect_uri=https://oauth.vk.com/blank.html&response_type=token&display=mobile&scope=\(infoScope)") else {return}
+        webView.load(URLRequest(url:url))
+    }
+    
+    private func setupUI() {
+        view.addSubview(webView)
     }
 
 }

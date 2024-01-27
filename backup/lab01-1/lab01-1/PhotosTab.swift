@@ -38,9 +38,6 @@ final class PhotosTab: UICollectionViewController {
         title = "Photos"
         collectionView.backgroundColor = .white
         collectionView.register(PhotoCellIterator.self, forCellWithReuseIdentifier: "photoReuseID")
-        
-        let ns = NetworkService()
-        ns.getPhotos()
     }
     
     override func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {

@@ -69,6 +69,8 @@ final class FriendsTab: UITableViewController {
         view.backgroundColor = .white
         title = "Friends"
         tableView.register(FriendCellIterator.self, forCellReuseIdentifier: "friendReuseID")
+        let ns = NetworkService()
+        ns.getFriends()
     }
     
 }

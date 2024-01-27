@@ -82,8 +82,6 @@ final class GroupsTab: UITableViewController {
         view.backgroundColor = .white
         title = "Groups"
         tableView.register(GroupCellIterator.self, forCellReuseIdentifier: "groupReuseID")
-        let ns = NetworkService()
-        ns.getGroups()
     }
     
 }

@@ -60,6 +60,7 @@
 		60E59B892B49CD5900C77022 /* lab01-1 */ = {
 			isa = PBXGroup;
 			children = (
+				60B797052B5DAB77000DAD8D /* PhotosTab.swift */,
 				60E59B8A2B49CD5900C77022 /* AppDelegate.swift */,
 				60E59B8C2B49CD5900C77022 /* SceneDelegate.swift */,
 				60E59B8E2B49CD5900C77022 /* ViewController.swift */,
@@ -68,7 +69,6 @@
 				60E59B982B49CD5C00C77022 /* Info.plist */,
 				60B797012B5D9EBE000DAD8D /* FriendsTab.swift */,
 				60B797032B5DA99B000DAD8D /* GroupsTab.swift */,
-				60B797052B5DAB77000DAD8D /* PhotosTab.swift */,
 			);
 			path = "lab01-1";
 			sourceTree = "<group>";
