@@ -19,7 +19,20 @@ final class PhotoCellIterator: UICollectionViewCell {
     }
     
     private var photoCell = UIImageView(image: UIImage(named: "login"))
-    
+
+    func updateCell(photo: Photo) {
+        
+        DispatchQueue.global().async {
+            
+            if let url = URL(string: photo.sizes[2].url), let image = try? Data(contentsOf: url) {
+                
+                DispatchQueue.main.async {
+                    self.photoCell.image = UIImage(data: image)
+                }
+            }
+        }
+    }
+
     private func setConstrs(){
         photoCell.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
@@ -33,6 +46,8 @@ final class PhotoCellIterator: UICollectionViewCell {
 }
 
 final class PhotosTab: UICollectionViewController {
+    private var photoModel: [Photo] = []
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         title = "Photos"
@@ -40,18 +55,26 @@ final class PhotosTab: UICollectionViewController {
         collectionView.register(PhotoCellIterator.self, forCellWithReuseIdentifier: "photoReuseID")
         
         let ns = NetworkService()
-        ns.getPhotos()
+        ns.getPhotos { [weak self] photos in
+            
+            self?.photoModel = photos
+            
+            DispatchQueue.main.async {
+                self?.collectionView.reloadData()
+            }
+        }
     }
     
     override func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "photoReuseID", for: indexPath) as? PhotoCellIterator else {
             return UICollectionViewCell()
         }
+        cell.updateCell(photo: photoModel[indexPath.row])
         return cell
     }
     
     override func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        6
+        photoModel.count
     }
     
 }

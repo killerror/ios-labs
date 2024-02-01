@@ -13,6 +13,7 @@ final class FriendCellIterator: UITableViewCell {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         contentView.addSubview(avatarImage)
         contentView.addSubview(captionText)
+        contentView.addSubview(friendIsOnline)
         setConstrs()
     }
     
@@ -33,10 +34,36 @@ final class FriendCellIterator: UITableViewCell {
         caption.textColor = .black
         return caption
     }()
+
+    private var friendIsOnline: UIView = {
+        let view = UIView()
+        view.backgroundColor = .red
+        view.layer.cornerRadius = 5 // Половина длины стороны
+        return view
+    }()
+    
+    func updateCell(friend: Friend) {
+        
+        captionText.text = friend.firstName + " " + friend.lastName
+        
+        friendIsOnline.backgroundColor = friend.online == 1 ? .green : .red
+        
+        DispatchQueue.global().async {
+            
+            // Проверяем урл картинки и следом получаем саму картинку по этому урл через try? Data
+            if let url = URL(string: friend.photo), let image = try? Data(contentsOf: url) {
+                
+                DispatchQueue.main.async {
+                    self.avatarImage.image = UIImage(data: image)
+                }
+            }
+        }
+    }
     
     private func setConstrs(){
         avatarImage.translatesAutoresizingMaskIntoConstraints = false
         captionText.translatesAutoresizingMaskIntoConstraints = false
+        friendIsOnline.translatesAutoresizingMaskIntoConstraints = false
         let avatarSide: CGFloat = 50
         NSLayoutConstraint.activate([
             avatarImage.leftAnchor.constraint(equalTo: contentView.leftAnchor, constant: 10),
@@ -44,7 +71,12 @@ final class FriendCellIterator: UITableViewCell {
             avatarImage.heightAnchor.constraint(equalToConstant: avatarSide),
             
             captionText.leftAnchor.constraint(equalTo: avatarImage.rightAnchor, constant: 10),
-            captionText.rightAnchor.constraint(equalTo: contentView.rightAnchor, constant: -10)
+            captionText.rightAnchor.constraint(equalTo: contentView.rightAnchor, constant: -10),
+            
+            friendIsOnline.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
+            friendIsOnline.rightAnchor.constraint(equalTo: contentView.rightAnchor, constant: -10),
+            friendIsOnline.heightAnchor.constraint(equalToConstant: 10),
+            friendIsOnline.widthAnchor.constraint(equalTo: friendIsOnline.heightAnchor)
             
         ])
     }
@@ -52,15 +84,18 @@ final class FriendCellIterator: UITableViewCell {
 }
 
 final class FriendsTab: UITableViewController {
+    
+    private var friendModel: [Friend] = []
 
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        5
+        friendModel.count
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         guard let cell = tableView.dequeueReusableCell(withIdentifier: "friendReuseID") as? FriendCellIterator else {
             return UITableViewCell()
         }
+        cell.updateCell(friend: friendModel[indexPath.row])
         return cell
     }
     
@@ -70,7 +105,14 @@ final class FriendsTab: UITableViewController {
         title = "Friends"
         tableView.register(FriendCellIterator.self, forCellReuseIdentifier: "friendReuseID")
         let ns = NetworkService()
-        ns.getFriends()
+        ns.getFriends { [weak self] friends in
+            
+            self?.friendModel = friends
+            
+            DispatchQueue.main.async {
+                self?.tableView.reloadData()
+            }
+        }
     }
     
 }

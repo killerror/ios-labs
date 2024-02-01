@@ -11,21 +11,22 @@ import Foundation
 
 
 struct PhotosStruct: Decodable {
-    let response: PhotoItems
+    let response: PhotosItems
 }
 
-struct PhotoItems: Decodable {
-    let items: [PhotoSizes]
-}
-
-struct PhotoSizes: Decodable {
-    let sizes: [Photo]
+struct PhotosItems: Decodable {
+    let items: [Photo]
 }
 
 struct Photo: Decodable {
-    let url: String
+    let sizes: [PhotoSizes]
 }
 
+struct PhotoSizes: Decodable {
+    let width: Int
+    let height: Int
+    let url: String
+}
 // ----------
 
 struct GroupsStuct: Decodable {
@@ -61,10 +62,12 @@ struct Friend: Decodable {
     let firstName: String
     let lastName: String
     let photo: String
+    let online: Int
     enum CodingKeys: String, CodingKey{
         case firstName = "first_name"
         case lastName = "last_name"
         case photo = "photo_50"
+        case online
     }
 }
 
@@ -74,35 +77,38 @@ class NetworkService {
 
     static let session = URLSession.shared
 
-    func getGroups() {
+    func getGroups(completion: @escaping ([Group]) -> Void) {
         guard let url = URL(string: "https://api.vk.com/method/groups.get?access_token=\(NetworkService.token)&v=5.199&extended=1&fields=description") else {return}
         NetworkService.session.dataTask(with: url) { (data, _, networkError) in
             guard let data = data else {return}
             do {
                 let groups = try JSONDecoder().decode(GroupsStuct.self, from: data)
-                print(groups)
+                //print(groups)
+                completion(groups.response.items)
             } catch {print(error)}
         }.resume()
     }
 
-    func getFriends() {
-        guard let url = URL(string: "https://api.vk.com/method/friends.get?access_token=\(NetworkService.token)&v=5.199&fields=photo_50") else {return}
+    func getFriends(completion: @escaping ([Friend]) -> Void) {
+        guard let url = URL(string: "https://api.vk.com/method/friends.get?access_token=\(NetworkService.token)&v=5.199&fields=online,photo_50") else {return}
         NetworkService.session.dataTask(with: url) { (data, _, networkError) in
             guard let data = data else {return}
             do {
                 let friends = try JSONDecoder().decode(FriendsStuct.self, from: data)
-                print(friends)
+                //print(friends)
+                completion(friends.response.items)
             } catch {print(error)}
         }.resume()
     }
     
-    func getPhotos() {
+    func getPhotos(completion: @escaping ([Photo]) -> Void) {
         guard let url = URL(string: "https://api.vk.com/method/photos.get?access_token=\(NetworkService.token)&v=5.199&album_id=wall") else {return}
         NetworkService.session.dataTask(with: url) { (data, _, networkError) in
             guard let data = data else {return}
             do {
                 let photos = try JSONDecoder().decode(PhotosStruct.self, from: data)
-                print(photos)
+                //print(photos)
+                completion(photos.response.items)
             } catch {print(error)}
         }.resume()
     }

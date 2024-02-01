@@ -42,6 +42,24 @@ final class GroupCellIterator: UITableViewCell {
         return caption
     }()
 
+    func updateCell(group: Group) {
+        
+        captionText.text = group.name
+        descText.text = group.desc
+
+        DispatchQueue.global().async {
+            
+            // Проверяем урл картинки и следом получаем саму картинку по этому урл через try? Data
+            if let url = URL(string: group.photo), let image = try? Data(contentsOf: url) {
+                
+                DispatchQueue.main.async {
+                    self.avatarImage.image = UIImage(data: image)
+                }
+            }
+        }
+    }
+
+    
     private func setConstrs(){
         avatarImage.translatesAutoresizingMaskIntoConstraints = false
         captionText.translatesAutoresizingMaskIntoConstraints = false
@@ -65,15 +83,17 @@ final class GroupCellIterator: UITableViewCell {
 }
 
 final class GroupsTab: UITableViewController {
+    private var groupModel: [Group] = []
 
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        5
+        groupModel.count
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         guard let cell = tableView.dequeueReusableCell(withIdentifier: "groupReuseID") as? GroupCellIterator else {
             return UITableViewCell()
         }
+        cell.updateCell(group: groupModel[indexPath.row])
         return cell
     }
     
@@ -83,7 +103,14 @@ final class GroupsTab: UITableViewController {
         title = "Groups"
         tableView.register(GroupCellIterator.self, forCellReuseIdentifier: "groupReuseID")
         let ns = NetworkService()
-        ns.getGroups()
+        ns.getGroups { [weak self] groups in
+            
+            self?.groupModel = groups
+            
+            DispatchQueue.main.async {
+                self?.tableView.reloadData()
+            }
+        }
     }
     
 }
